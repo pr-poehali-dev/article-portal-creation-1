@@ -16,6 +16,7 @@ type Article = {
   audioUrl?: string;
   artist?: string;
   duration?: string;
+  galleryImages?: string[];
 };
 
 const articles: Article[] = [
@@ -26,7 +27,13 @@ const articles: Article[] = [
     image: 'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/d4d2c26b-b313-495e-98a4-8d49ad36e933.jpg',
     category: 'Фотогалерея',
     date: '15 ноября 2024',
-    readTime: '8 мин'
+    readTime: '8 мин',
+    galleryImages: [
+      'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/d4d2c26b-b313-495e-98a4-8d49ad36e933.jpg',
+      'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/291f84fa-fc4b-4031-8fe8-55971fac6ac6.jpg',
+      'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/fd8ebcce-a2a6-4723-b246-ff1c2ab9e6d2.jpg',
+      'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/9ed999f8-2007-4334-b8b7-a7e7b742349d.jpg'
+    ]
   },
   {
     id: 2,
@@ -68,7 +75,11 @@ const articles: Article[] = [
     image: 'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/d4d2c26b-b313-495e-98a4-8d49ad36e933.jpg',
     category: 'Фотогалерея',
     date: '5 ноября 2024',
-    readTime: '9 мин'
+    readTime: '9 мин',
+    galleryImages: [
+      'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/291f84fa-fc4b-4031-8fe8-55971fac6ac6.jpg',
+      'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/9ed999f8-2007-4334-b8b7-a7e7b742349d.jpg'
+    ]
   }
 ];
 
@@ -80,6 +91,7 @@ export default function Index() {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [currentTrack, setCurrentTrack] = useState<Article | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -196,6 +208,30 @@ export default function Index() {
                   </div>
                 </div>
               )}
+
+              {selectedArticle.galleryImages && selectedArticle.galleryImages.length > 0 && (
+                <div className="mt-12">
+                  <h3 className="text-3xl font-serif font-semibold mb-6">Галерея</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {selectedArticle.galleryImages.map((img, index) => (
+                      <div
+                        key={index}
+                        className="relative aspect-square overflow-hidden rounded-lg cursor-pointer group"
+                        onClick={() => setLightboxImage(img)}
+                      >
+                        <img
+                          src={img}
+                          alt={`Gallery ${index + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                          <Icon name="Expand" size={24} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </article>
@@ -242,6 +278,38 @@ export default function Index() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+            )}
+
+            {selectedCategory === 'Фотогалерея' && (
+              <div className="space-y-6">
+                <h2 className="text-3xl font-serif font-bold">Избранные работы</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[
+                    'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/d4d2c26b-b313-495e-98a4-8d49ad36e933.jpg',
+                    'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/291f84fa-fc4b-4031-8fe8-55971fac6ac6.jpg',
+                    'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/fd8ebcce-a2a6-4723-b246-ff1c2ab9e6d2.jpg',
+                    'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/9ed999f8-2007-4334-b8b7-a7e7b742349d.jpg',
+                    'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/bcaf24d2-ea75-40ae-815c-34ac7899d8fb.jpg',
+                    'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/d4d2c26b-b313-495e-98a4-8d49ad36e933.jpg'
+                  ].map((img, index) => (
+                    <div
+                      key={index}
+                      className="relative aspect-square overflow-hidden rounded-lg cursor-pointer group animate-scale-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                      onClick={() => setLightboxImage(img)}
+                    >
+                      <img
+                        src={img}
+                        alt={`Photo ${index + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                        <Icon name="Expand" size={32} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -393,6 +461,26 @@ export default function Index() {
       )}
 
       <audio ref={audioRef} />
+
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+          >
+            <Icon name="X" size={32} />
+          </button>
+          <img
+            src={lightboxImage}
+            alt="Lightbox"
+            className="max-w-full max-h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
