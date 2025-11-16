@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,9 @@ type Article = {
   category: string;
   date: string;
   readTime: string;
+  audioUrl?: string;
+  artist?: string;
+  duration?: string;
 };
 
 const articles: Article[] = [
@@ -41,7 +44,10 @@ const articles: Article[] = [
     image: 'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/bcaf24d2-ea75-40ae-815c-34ac7899d8fb.jpg',
     category: 'Музыка',
     date: '10 ноября 2024',
-    readTime: '10 мин'
+    readTime: '10 мин',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    artist: 'SoundHelix',
+    duration: '3:45'
   },
   {
     id: 4,
@@ -50,7 +56,10 @@ const articles: Article[] = [
     image: 'https://cdn.poehali.dev/projects/530cdf9e-e7b0-4946-85d9-8be4cf87ebdf/files/bcaf24d2-ea75-40ae-815c-34ac7899d8fb.jpg',
     category: 'Музыка',
     date: '8 ноября 2024',
-    readTime: '7 мин'
+    readTime: '7 мин',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    artist: 'SoundHelix',
+    duration: '4:12'
   },
   {
     id: 5,
@@ -69,6 +78,35 @@ export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState('Все');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [currentTrack, setCurrentTrack] = useState<Article | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play();
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (currentTrack?.audioUrl && audioRef.current) {
+      audioRef.current.src = currentTrack.audioUrl;
+      setIsPlaying(true);
+    }
+  }, [currentTrack]);
+
+  const togglePlay = (article: Article) => {
+    if (currentTrack?.id === article.id) {
+      setIsPlaying(!isPlaying);
+    } else {
+      setCurrentTrack(article);
+      setIsPlaying(true);
+    }
+  };
 
   const filteredArticles = articles.filter((article) => {
     const matchesCategory = selectedCategory === 'Все' || article.category === selectedCategory;
@@ -140,6 +178,24 @@ export default function Index() {
               <p className="leading-relaxed">
                 Заключительная часть статьи подводит итоги и оставляет читателя с размышлениями о прочитанном материале.
               </p>
+
+              {selectedArticle.audioUrl && (
+                <div className="mt-12 p-6 bg-card border rounded-lg">
+                  <h3 className="text-xl font-serif font-semibold mb-4">Прослушать</h3>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => togglePlay(selectedArticle)}
+                      className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 transition-transform"
+                    >
+                      <Icon name={currentTrack?.id === selectedArticle.id && isPlaying ? 'Pause' : 'Play'} size={20} />
+                    </button>
+                    <div className="flex-1">
+                      <p className="font-semibold">{selectedArticle.title}</p>
+                      <p className="text-sm text-muted-foreground">{selectedArticle.artist} • {selectedArticle.duration}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </article>
@@ -187,6 +243,30 @@ export default function Index() {
                   </CardContent>
                 </Card>
               </div>
+            )}
+
+            {selectedCategory === 'Музыка' && filteredArticles.some(a => a.audioUrl) && (
+              <Card className="p-6 bg-card/50 backdrop-blur-sm">
+                <h3 className="text-xl font-serif font-semibold mb-4">Музыкальные треки</h3>
+                <div className="space-y-3">
+                  {filteredArticles.filter(a => a.audioUrl).map((track) => (
+                    <div
+                      key={track.id}
+                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+                      onClick={() => togglePlay(track)}
+                    >
+                      <button className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
+                        <Icon name={currentTrack?.id === track.id && isPlaying ? 'Pause' : 'Play'} size={16} />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{track.title}</p>
+                        <p className="text-sm text-muted-foreground">{track.artist} • {track.duration}</p>
+                      </div>
+                      <Icon name="Music" size={20} className="text-muted-foreground" />
+                    </div>
+                  ))}
+                </div>
+              </Card>
             )}
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -283,6 +363,36 @@ export default function Index() {
           </aside>
         </div>
       </div>
+
+      {currentTrack && (
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t backdrop-blur-sm z-50 animate-fade-in">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => togglePlay(currentTrack)}
+                className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 transition-transform"
+              >
+                <Icon name={isPlaying ? 'Pause' : 'Play'} size={20} />
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold truncate">{currentTrack.title}</p>
+                <p className="text-sm text-muted-foreground">{currentTrack.artist} • {currentTrack.duration}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setCurrentTrack(null);
+                  setIsPlaying(false);
+                }}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Icon name="X" size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <audio ref={audioRef} />
     </div>
   );
 }
